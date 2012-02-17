@@ -35,6 +35,6 @@ $(document).ready(function() {
 		xaxis: { mode: 'time', minTickSize: [1, "day"] },
 		yaxis: { min: 0, label: 'Tickets' },
 		y2axis: { min: 0 },
-		legend: { position: 'ne' }
+		legend: { position: 'nw' }
 	});
 });
