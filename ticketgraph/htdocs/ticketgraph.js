@@ -5,27 +5,27 @@ $(document).ready(function() {
 	[
 		{
 			data: closedTickets,
-			label: 'Closed tickets',
+			label: 'Closed',
 			bars: barSettings,
 			color: 1
 		},
 		{
 			data: openedTickets,
-			label: 'New tickets',
+			label: 'New',
 			bars: barSettings,
 			color: 2,
 			stack: true
 		},
 		{
 			data: reopenedTickets,
-			label: 'Reopened tickets',
+			label: 'Reopened',
 			bars: barSettings,
 			color: 3,
 			stack: true
 		},
 		{
 			data: openTickets,
-			label: 'Open tickets',
+			label: 'Open',
 			yaxis: 2,
 			lines: { show: true },
 			color: 0
