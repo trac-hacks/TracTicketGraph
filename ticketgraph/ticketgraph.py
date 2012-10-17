@@ -49,7 +49,7 @@ class TicketGraphModule(Component):
         # These are in microseconds; the data returned is in milliseconds
         # because it gets passed to flot
         ts_start = to_utimestamp(today - datetime.timedelta(days=days))
-        ts_end = to_utimestamp(today)
+        ts_end = to_utimestamp(today) + 86400000000;
 
         db = self.env.get_read_db()
         cursor = db.cursor()
