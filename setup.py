@@ -11,7 +11,7 @@ from setuptools import setup
 
 setup(
     name='TracTicketGraph',
-    version='1.0.1',
+    version='1.0.2',
     packages=['ticketgraph'],
     package_data={'ticketgraph': ['htdocs/*.*', 'templates/*.*']},
 
@@ -29,7 +29,7 @@ setup(
     install_requires=['Trac'],
     entry_points={
         'trac.plugins': [
-            'ticketgraph = ticketgraph',
+            'ticketgraph = ticketgraph.ticketgraph',
         ],
     }
 )
