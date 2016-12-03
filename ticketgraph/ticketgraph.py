@@ -11,8 +11,9 @@ import datetime
 import math
 import pkg_resources
 
-from trac.core import *
+from trac.core import Component, implements
 from trac.perm import IPermissionRequestor
+from trac.ticket import model
 from trac.util.datefmt import to_datetime, to_utimestamp, user_time, utc
 from trac.util.html import html
 from trac.util.translation import _
@@ -61,7 +62,8 @@ class TicketGraphModule(Component):
     def process_request(self, req):
         req.perm.require('TICKET_GRAPH')
 
-        days_back = int(req.args.get('days', 30))
+        days_back = int(req.args.get('days', 90))
+        component = req.args.get('component', '')
 
         today = datetime.datetime.now(utc)
         ts_start = to_utimestamp(today - datetime.timedelta(days=days_back))
@@ -74,50 +76,59 @@ class TicketGraphModule(Component):
             'openTickets': {}
         }
 
+        components = [c.name for c in model.Component.select(self.env)]
+        if component not in components:
+            component = ''
+
         with self.env.db_query as db:
+            component_clause = "AND t.component='%s'" % component \
+                               if component else ""
             # number of created tickets in time period, grouped by day (ms)
             for tid, timestamp, in db("""
-                    SELECT id, time FROM ticket
-                    WHERE time BETWEEN %s AND %s
-                    ORDER BY time ASC
-                    """, (ts_start, ts_end)):
+                    SELECT id, time FROM ticket t
+                    WHERE t.time BETWEEN %%s AND %%s %s
+                    ORDER BY t.time ASC
+                    """ % component_clause, (ts_start, ts_end)):
                 date_ = localize_and_truncate(req, timestamp)
                 series['openedTickets'].setdefault(date_, 0)
                 series['openedTickets'][date_] += 1
 
             # number of reopened tickets in time period, grouped by day (ms)
             for tid, timestamp in db("""
-                    SELECT DISTINCT ticket, time FROM ticket_change
+                    SELECT DISTINCT tc.ticket, tc.time FROM ticket_change tc
+                     INNER JOIN ticket t ON tc.ticket = t.id
                     WHERE field='status' AND newvalue='reopened'
-                     AND time BETWEEN %s AND %s
-                    ORDER BY time ASC
-                    """, (ts_start, ts_end)):
+                     AND tc.time BETWEEN %%s AND %%s %s
+                    ORDER BY tc.time ASC
+                    """ % component_clause, (ts_start, ts_end)):
                 date_ = localize_and_truncate(req, timestamp)
                 series['reopenedTickets'].setdefault(date_, 0)
                 series['reopenedTickets'][date_] += 1
 
             # number of closed tickets in time period, grouped by day (ms)
             for count, timestamp in db("""
-                    SELECT DISTINCT ticket, time FROM ticket_change
+                    SELECT DISTINCT tc.ticket, tc.time FROM ticket_change tc
+                     INNER JOIN ticket t ON tc.ticket = t.id
                     WHERE field='status' AND newvalue='closed'
-                     AND time BETWEEN %s AND %s
-                    ORDER BY time ASC
-                    """, (ts_start, ts_end)):
+                     AND tc.time BETWEEN %%s AND %%s %s
+                    ORDER BY tc.time ASC
+                    """ % component_clause, (ts_start, ts_end)):
                 date_ = localize_and_truncate(req, timestamp)
                 series['closedTickets'].setdefault(date_, 0)
-                series['closedTickets'][date_] += 1
+                series['closedTickets'][date_] -= 1
 
             # number of open tickets at end of the reporting period
             open_tickets = 0
             for open_tickets, in db("""
-                    SELECT COUNT(*) FROM ticket WHERE status!='closed'
-                    """):
+                    SELECT COUNT(*) FROM ticket t
+                    WHERE status!='closed' %s
+                    """ % component_clause):
                 break
 
         open_ts = localize_and_truncate(req, ts_end)
         while open_ts >= localize_and_truncate(req, ts_start):
             if open_ts in series['closedTickets']:
-                open_tickets += series['closedTickets'][open_ts]
+                open_tickets -= series['closedTickets'][open_ts]
             if open_ts in series['openedTickets']:
                 open_tickets -= series['openedTickets'][open_ts]
             if open_ts in series['reopenedTickets']:
@@ -135,7 +146,11 @@ class TicketGraphModule(Component):
         add_script(req, 'ticketgraph/ticketgraph.js')
         add_script_data(req, data)
 
-        return 'ticketgraph.html', {'days': days_back}, None
+        return 'ticketgraph.html', {
+            'days': days_back,
+            'component': component,
+            'components': components
+        }, None
 
 
 def localize_and_truncate(req, ts):

@@ -1,40 +1,47 @@
-$(document).ready(function() {
-	var graph = $('#placeholder').width(640).height(400),
-	barSettings = { show: true, barWidth: 86400000 };
-	$.plot($('#placeholder'),
+jQuery(document).ready(function($) {
+	$('#ticketgraph').find('input').hide().end()
+		.find('select').change(function() {
+			$('#ticketgraph').submit();
+		});
+
+	var $placeholder = $('#placeholder');
+	$placeholder.width(800).height(500);
+	var barSettings = { show: true, barWidth: 86400000 };
+	$.plot($placeholder,
 	[
 		{
 			data: closedTickets,
 			label: 'Closed',
 			bars: barSettings,
-			color: 1
+			color: '#8b0000'
 		},
 		{
 			data: openedTickets,
 			label: 'New',
 			bars: barSettings,
-			color: 2,
+			color: '#66cd00',
 			stack: true
 		},
 		{
 			data: reopenedTickets,
 			label: 'Reopened',
 			bars: barSettings,
-			color: 3,
+			color: '#458b00',
 			stack: true
 		},
 		{
 			data: openTickets,
 			label: 'Open',
 			yaxis: 2,
-			lines: { show: true },
-			color: 0
+			lines: { show: true, steps: false },
+			shadowSize: 0,
+			color: '#333'
 		}
 	],
 	{
 		xaxis: { mode: 'time', minTickSize: [1, "day"] },
-		yaxis: { min: 0, label: 'Tickets' },
+		yaxis: { label: 'Tickets' },
 		y2axis: { min: 0 },
-		legend: { position: 'nw' }
+		legend: { position: 'sw' }
 	});
 });
