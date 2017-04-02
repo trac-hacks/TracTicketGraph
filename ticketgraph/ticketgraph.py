@@ -143,6 +143,7 @@ class TicketGraphModule(Component):
 
         add_script(req, 'ticketgraph/jquery.flot.min.js')
         add_script(req, 'ticketgraph/jquery.flot.stack.min.js')
+        add_script(req, 'ticketgraph/jquery.flot.time.min.js')
         add_script(req, 'ticketgraph/ticketgraph.js')
         add_script_data(req, data)
 
