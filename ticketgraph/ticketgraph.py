@@ -17,12 +17,40 @@ from trac.ticket import model
 from trac.util.datefmt import to_datetime, to_utimestamp, user_time, utc
 from trac.util.html import html
 from trac.util.translation import _
-from trac.web import IRequestHandler
+from trac.web.api import IRequestHandler, _RequestArgs
 from trac.web.chrome import INavigationContributor, ITemplateProvider, \
                             add_script, add_script_data
 
 MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000L
 MICROSECONDS_PER_DAY = MILLISECONDS_PER_DAY * 1000
+
+
+if not hasattr(_RequestArgs, 'getint'):
+    # Compatibility method, copied from Trac 1.2.
+    from trac.util import as_int
+    from trac.util.translation import tag, tag_
+    from trac.web.api import HTTPBadRequest
+
+    def getint(self, name, default=None, min=None, max=None):
+        """Return the value as an integer. Raise an `HTTPBadRequest`
+        exception if an exception occurs while converting the value
+        to an integer.
+
+        :param name: the name of the request parameter
+        :keyword default: the value to return if the parameter is not
+                          specified
+        :keyword min: lower bound to which the value is limited
+        :keyword max: upper bound to which the value is limited
+        """
+        if name not in self:
+            return default
+        value = as_int(self[name], None, min, max)
+        if value is None:
+            raise HTTPBadRequest(tag_("Invalid value for request argument "
+                                      "%(name)s.", name=tag.em(name)))
+        return value
+
+    _RequestArgs.getint = getint
 
 
 class TicketGraphModule(Component):
@@ -62,7 +90,7 @@ class TicketGraphModule(Component):
     def process_request(self, req):
         req.perm.require('TICKET_GRAPH')
 
-        days_back = int(req.args.get('days', 90))
+        days_back = req.args.getint('days', 90)
         component = req.args.get('component', '')
 
         today = datetime.datetime.now(utc)
