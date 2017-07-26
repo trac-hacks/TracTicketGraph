@@ -14,12 +14,12 @@ import pkg_resources
 from trac.core import Component, implements
 from trac.perm import IPermissionRequestor
 from trac.ticket import model
-from trac.util.datefmt import to_datetime, to_utimestamp, user_time, utc
+from trac.util.datefmt import to_datetime, to_utimestamp, utc
 from trac.util.html import html
 from trac.util.translation import _
 from trac.web.api import IRequestHandler, _RequestArgs
-from trac.web.chrome import INavigationContributor, ITemplateProvider, \
-                            add_script, add_script_data
+from trac.web.chrome import (
+    INavigationContributor, ITemplateProvider, add_script, add_script_data)
 
 MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000L
 MICROSECONDS_PER_DAY = MILLISECONDS_PER_DAY * 1000
