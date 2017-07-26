@@ -11,6 +11,7 @@ import datetime
 import math
 import pkg_resources
 
+from trac.config import IntOption
 from trac.core import Component, implements
 from trac.perm import IPermissionRequestor
 from trac.ticket import model
@@ -58,6 +59,10 @@ class TicketGraphModule(Component):
     implements(INavigationContributor, IPermissionRequestor, IRequestHandler,
                ITemplateProvider)
 
+    default_daysback = IntOption(
+        'ticketgraph', 'default_daysback', 90,
+        """Default number of days display in the graph.""")
+
     # IPermissionRequestor methods
 
     def get_permission_actions(self):
@@ -90,7 +95,7 @@ class TicketGraphModule(Component):
     def process_request(self, req):
         req.perm.require('TICKET_GRAPH')
 
-        days_back = req.args.getint('days', 90)
+        days_back = req.args.getint('days', self.default_daysback)
         component = req.args.get('component', '')
 
         today = datetime.datetime.now(utc)
